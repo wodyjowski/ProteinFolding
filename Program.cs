@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -8,34 +9,46 @@ namespace ProteinFolding
     {
         static void Main(string[] args)
         {
+            while(true){
+
+            
             string input = ReadInput();
             Algorithm algorithm = new Algorithm(input);
-            AminoAcid output = algorithm.Calculate();
-            PrintProtein(output, input.Length);
+            // Stopwatch sw = new Stopwatch();
+            // sw.Start();
+            // int proteinPower = algorithm.GetProteinValue(outProtein);
+            // sw.Stop();
+
+            (AminoAcid proteinHead, int proteinValue) result = algorithm.FindBestResult(1000);
+
+            PrintProtein(result.proteinHead, input.Length);
+            
+            Console.WriteLine($"value: {result.proteinValue}");
+            }
         }
 
         private static void PrintProtein(AminoAcid proteinHead, int size)
         {
             StringBuilder sb = new StringBuilder();
             AminoAcid node = proteinHead;
-            string[,] charArray = new string[size * 2, size * 2];
-            int halfSize = size / 2;
+            string[,] stringArray = new string[size * 2, size * 2];
+            int halfSize = size;
 
             while (node != null)
             {
                 string nodeName = node.Type.ToString() + size;
-                charArray[node.X + halfSize + 1, node.Y + halfSize + 1] = nodeName;
+                stringArray[node.X + halfSize, node.Y + halfSize ] = nodeName;
                 node = node.Previous;
                 --size;
             }
 
-            for (int i = 0; i < charArray.GetLength(0); i++)
+            for (int i = 0; i < stringArray.GetLength(0); i++)
             {
-                for (int j = 0; j < charArray.GetLength(1); j++)
+                for (int j = 0; j < stringArray.GetLength(1); j++)
                 {
-                    if (charArray[i, j] != null)
+                    if (stringArray[i, j] != null)
                     {
-                        sb.Append(charArray[i, j].PadRight(3));
+                        sb.Append(stringArray[i, j].PadRight(3));
                     }
                     else
                     {
