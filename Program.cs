@@ -19,7 +19,7 @@ namespace ProteinFolding
             // int proteinPower = algorithm.GetProteinValue(outProtein);
             // sw.Stop();
 
-            (AminoAcid proteinHead, int proteinValue) result = algorithm.FindBestResult(1000);
+            (AminoAcid proteinHead, int proteinValue) result = algorithm.FindBestResult(100);
 
             PrintProtein(result.proteinHead, input.Length);
             

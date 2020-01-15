@@ -12,6 +12,31 @@ namespace ProteinFolding
         public int Y { get; set; }
         public AcidType Type { get; set; }
         public AminoAcid Previous { get; set; }
+        public int PrevDirection { get; set; } = -1;
+
+        public void Up()
+        {
+            PrevDirection = 0;
+            --X;
+        }
+        
+        public void Down()
+        {
+            PrevDirection = 1;
+            ++X;
+        }
+
+        public void Left()
+        {
+            PrevDirection = 2;
+            --Y;
+        }
+
+        public void Right()
+        {
+            PrevDirection = 3;
+            ++Y;
+        }
 
         public override bool Equals(object? obj)
         {
