@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -9,21 +10,30 @@ namespace ProteinFolding
     {
         static void Main(string[] args)
         {
-            while(true){
 
-            
-            string input = ReadInput();
-            Algorithm algorithm = new Algorithm(input);
-            // Stopwatch sw = new Stopwatch();
-            // sw.Start();
-            // int proteinPower = algorithm.GetProteinValue(outProtein);
-            // sw.Stop();
+            while (true)
+            {
 
-            (AminoAcid proteinHead, int proteinValue) result = algorithm.FindBestResult(100);
 
-            PrintProtein(result.proteinHead, input.Length);
-            
-            Console.WriteLine($"value: {result.proteinValue}");
+                string input = ReadInput();
+                if (string.IsNullOrEmpty(input))
+                    continue;
+                Algorithm algorithm = new Algorithm(input);
+                // Stopwatch sw = new Stopwatch();
+                // sw.Start();
+                // int proteinPower = algorithm.GetProteinValue(outProtein);
+                // sw.Stop();
+
+                //(AminoAcid proteinHead, int proteinValue) result = algorithm.FindBestResult(100000);
+                (AminoAcid proteinHead, int proteinValue) result = algorithm.FindBestResultInTime(30000);
+
+                if (result.proteinHead != null)
+                {
+                    PrintProtein(result.proteinHead, input.Length);
+                }
+
+
+                Console.WriteLine($"value: {result.proteinValue}");
             }
         }
 
@@ -37,7 +47,7 @@ namespace ProteinFolding
             while (node != null)
             {
                 string nodeName = node.Type.ToString() + size;
-                stringArray[node.X + halfSize, node.Y + halfSize ] = nodeName;
+                stringArray[node.X + halfSize, node.Y + halfSize] = nodeName;
                 node = node.Previous;
                 --size;
             }

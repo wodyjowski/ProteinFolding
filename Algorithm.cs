@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProteinFolding
@@ -12,9 +13,32 @@ namespace ProteinFolding
             Input = input ?? throw new System.ArgumentNullException(nameof(input));
         }
 
+        public (AminoAcid, int result) FindBestResultInTime(int maxTimeMs)
+        {
+            Task[] taskArray = new Task[Environment.ProcessorCount];
+
+
+            CancellationTokenSource source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
+
+            for (int i = 0; i < taskArray.Length; i++)
+            {
+                taskArray[i] =
+                Task.Run(() => RandomSearchInTime(token), token);
+            }
+
+            Task.WaitAll(taskArray, maxTimeMs);
+            source.Cancel();
+
+            Console.WriteLine($"iterations: {iterations}");
+            return (bestProtein, bestResult);
+        }
+
         public (AminoAcid, int result) FindBestResult(int maxGenerations)
         {
-            Task[] taskArray = new Task[4];
+            iterations = maxGenerations;
+
+            Task[] taskArray = new Task[8];
 
             for (int i = 0; i < taskArray.Length; i++)
             {
@@ -26,21 +50,57 @@ namespace ProteinFolding
 
             return (bestProtein, bestResult);
         }
+
+
         AminoAcid bestProtein = null;
         int bestResult = 0;
         object lockObj = new object();
-        int iterations = 100;
+        long iterations = 0;
 
         public void RandomSearch()
         {
-            int iteration = 1;
-            while (iterations > 0)
+            while (true)
             {
                 AminoAcid generated = GenerateProtein();
+                if(generated == null)
+                {
+                    continue;
+                }
+
                 int genPower = GetProteinValue(generated);
                 lock (lockObj)
                 {
-                    iteration = --iterations;
+                    --iterations;
+                    if (genPower > bestResult)
+                    {
+                        bestResult = genPower;
+                        bestProtein = generated;
+                    }
+                    if (iterations <= 0)
+                        break;
+                }
+            }
+        }
+
+        public void RandomSearchInTime(CancellationToken cancelToken)
+        {
+            while (true)
+            {
+                if (cancelToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                AminoAcid generated = GenerateProtein();
+                if (generated == null)
+                {
+                    continue;
+                }
+
+                int genPower = GetProteinValue(generated);
+                lock (lockObj)
+                {
+                    ++iterations;
                     if (genPower > bestResult)
                     {
                         bestResult = genPower;
@@ -83,18 +143,34 @@ namespace ProteinFolding
             AminoAcid node = new AminoAcid(Input[0]);
             Random random = new Random();
 
+            int rvalue = -1;
+
+            // To check if node is not locked
+            int count = 0;
+
             for (int i = 1; i < Input.Length; i++)
             {
+                if(count == 4)
+                {
+                    return null;
+                }
+
                 AminoAcid newNode = new AminoAcid(Input[i])
                 {
                     X = node.X,
                     Y = node.Y
-                };
-                int rvalue = -1;
-                do
+                };   
+                if(rvalue == -1)
                 {
-                    rvalue = random.Next(4);
-                }while (rvalue == node.PrevDirection);
+                    do
+                    {
+                        rvalue = random.Next(4);
+                    } while (rvalue == node.PrevDirection);
+                }
+                else
+                {
+                    rvalue = (rvalue + 1) % 4;
+                }
                 switch (rvalue)
                 {
                     case 0:
@@ -116,6 +192,7 @@ namespace ProteinFolding
                 {
                     if (testNode.Equals(newNode))
                     {
+                        ++count;
                         notRepeated = false;
                         --i;
                         break;
@@ -127,6 +204,7 @@ namespace ProteinFolding
                 {
                     newNode.Previous = node;
                     node = newNode;
+                    rvalue = -1;
                 }
             }
             return node;
